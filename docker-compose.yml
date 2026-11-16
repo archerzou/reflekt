@@ -1,0 +1,50 @@
+# Local Docker setup for Reflekt.
+#
+# One service: the .NET API serves the API, the SignalR hub and the built Vue SPA.
+# The database is a SQLite file kept in the named volume `reflekt-data`, so it
+# survives `docker compose down`. There is no separate DB or web container — this
+# app is designed to run as a single instance (see docs/architecture).
+#
+#   docker compose up --build        # build and run
+#   open http://localhost:4001
+#
+# Copy .env.example to .env to override ports or set real Google credentials.
+
+services:
+  reflekt:
+    image: ${REFLEKT_IMAGE:-reflekt:local}
+    container_name: Reflekt
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_HTTP_PORTS: 8080
+      # SQLite file inside the mounted volume (relative to the app content root /app)
+      ConnectionStrings__Reflekt: "Data Source=./data/reflekt.db"
+      # Google OAuth is validated on start-up, so these must be non-empty.
+      # Placeholders let you run and join retros as a guest; real sign-in needs real values.
+      Auth__Google__ClientId: ${GOOGLE_CLIENT_ID:-placeholder}
+      Auth__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-placeholder}
+      # Optional sample data (Development only). Set SEED_USER_EMAIL to the Google
+      # account you sign in with so the seeded team is yours.
+      Seed__Enabled: ${SEED_ENABLED:-false}
+      Seed__SeedUserEmail: ${SEED_USER_EMAIL:-dev@localhost}
+    ports:
+      # Host 4001 matches the project's port convention and the OAuth redirect URIs
+      - "${WEB_PORT:-4001}:8080"
+    volumes:
+      - reflekt-data:/app/data
+      # Persist DataProtection keys so auth cookies / guest sessions survive restarts
+      - reflekt-keys:/root/.aspnet/DataProtection-Keys
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+volumes:
+  reflekt-data:
+  reflekt-keys:

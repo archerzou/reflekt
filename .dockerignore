@@ -1,0 +1,25 @@
+# Build output — rebuilt inside the image
+**/bin/
+**/obj/
+**/node_modules/
+web/reflekt-web/dist/
+src/Services/Reflekt/Reflekt.API/wwwroot/
+
+# Local database / containers state
+**/data/
+.containers/
+
+# VCS / IDE / docs not needed in the build context
+.git/
+.idea/
+.vs/
+graphify-out/
+
+# Secrets and local env
+*.env
+.env
+
+# Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose*.yml

@@ -138,6 +138,18 @@ dotnet user-secrets set "Seed:SeedUserEmail" "you@example.com"
 ```
 </details>
 
+### Run with Docker
+
+Prefer one command over the two-terminal setup above? The whole app (API, SignalR hub and the built Vue SPA) runs from a single image, with the SQLite database kept in a named volume. From the repository root:
+
+```powershell
+docker compose up --build
+```
+
+Then open `http://localhost:4001`. The container applies database migrations on start, so there is nothing else to set up — you can use it right away as a guest.
+
+For real Google sign-in, copy `.env.example` to `.env`, set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, add `http://localhost:4001/signin-google` as an authorized redirect URI, then `docker compose up -d`. Stop with `docker compose down` (the database is preserved) or `docker compose down -v` (also wipes it).
+
 ### Tests and build
 
 From the repository root:
